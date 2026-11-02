@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTPSS 35th Anniversary · STAR Divisibility Dash</title>
+    <style>
+        :root {
+            --bg: #0c1222;
+            --card: #1a2332;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --gold: #fbbf24;
+            --gold-dark: #b45309;
+            --purple: #a78bfa;
+            --blue: #60a5fa;
+            --green: #34d399;
+            --red: #f87171;
+            --focus: #fde68a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(ellipse at top, #1e293b 0%, var(--bg) 70%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            line-height: 1.5;
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--gold);
+            color: #000;
+            padding: 8px 16px;
+            z-index: 100;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 0 0 8px 0;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 820px;
+            background: var(--card);
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(251,191,36,0.18);
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        /* Anniversary badge */
+        .anni-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #92400e, var(--gold-dark));
+            color: #fef3c7;
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.03em;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(90deg, var(--gold), #fde68a, var(--purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .school-name {
+            font-size: 1.05rem;
+            color: var(--muted);
+            margin-bottom: 0.15rem;
+        }
+        .chinese-name {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 1.25rem;
+        }
+
+        .description {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            max-width: 36rem;
+        }
+
+        /* Controls */
+        .control-group {
+            background: rgba(15, 23, 42, 0.55);
+            padding: 1.1rem;
+            border-radius: 0.875rem;
+            width: 100%;
+            max-width: 28rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(251,191,36,0.15);
+        }
+        .control-label {
+            display: block;
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        .speed-options {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-speed {
+            background: #334155;
+            color: var(--muted);
+            border: 2px solid transparent;
+            padding: 0.55rem 1.1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            min-width: 4.5rem;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .btn-speed.selected,
+        .btn-speed[aria-pressed="true"] {
+            background: linear-gradient(135deg, var(--gold-dark), #d97706);
+            color: #fff;
+            border-color: var(--gold);
+        }
+        .btn-speed:focus-visible {
+            outline: 3px solid var(--focus);
+            outline-offset: 2px;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--gold-dark), #d97706 45%, var(--purple));
+            color: white;
+            border: none;
+            padding: 0.9rem 2.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 0.625rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(180,83,9,0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(180,83,9,0.45);
+        }
+        .btn-main:focus-visible {
+            outline: 3px solid var(--focus);
+            outline-offset: 3px;
+        }
+
+        /* HUD */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 0.75rem 1.1rem;
+            border-radius: 0.625rem;
+            border: 1px solid rgba(251,191,36,0.12);
+        }
+        .hud span span {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Track */
+        #track-area {
+            width: 100%;
+            height: 10.5rem;
+            background: linear-gradient(180deg, #0f172a, #1e293b);
+            border-radius: 0.875rem;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            border: 1px solid #334155;
+        }
+        #wall {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 0.875rem;
+            background: linear-gradient(180deg, var(--red), #b91c1c);
+            box-shadow: -6px 0 18px var(--red);
+            z-index: 10;
+        }
+        #number-runner {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: clamp(2.5rem, 8vw, 3.6rem);
+            font-weight: 800;
+            display: flex;
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+        }
+        .digit-hundreds { color: var(--purple); }
+        .digit-last2 { color: var(--blue); }
+
+        /* Action buttons */
+        .action-container {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            margin-bottom: 1.25rem;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 1rem 0.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 0.625rem;
+            cursor: pointer;
+            color: white;
+            min-height: 3.25rem;
+            transition: transform 0.12s, filter 0.12s;
+        }
+        .btn-yes { background: #059669; }
+        .btn-no  { background: #dc2626; }
+        .btn-action:hover { filter: brightness(1.08); }
+        .btn-action:active { transform: scale(0.97); }
+        .btn-action:focus-visible {
+            outline: 3px solid var(--focus);
+            outline-offset: 3px;
+        }
+
+        /* Cheat sheet */
+        .cheat-sheet {
+            background: rgba(96, 165, 250, 0.08);
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            border-radius: 0.75rem;
+            padding: 1rem 1.1rem;
+            width: 100%;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: #cbd5e1;
+        }
+        .cheat-sheet strong { color: var(--text); }
+        .cheat-sheet .highlight-purple { color: var(--purple); font-weight: 700; }
+        .cheat-sheet .highlight-blue { color: var(--blue); font-weight: 700; }
+
+        /* Feedback popup */
+        #feedback-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card);
+            border: 3px solid var(--red);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            z-index: 100;
+            width: 90%;
+            max-width: 28rem;
+            text-align: center;
+            display: none;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        #feedback-box[aria-hidden="false"] {
+            display: block;
+        }
+        #feedback-box h2 {
+            color: var(--red);
+            margin-bottom: 0.75rem;
+            font-size: 1.4rem;
+        }
+
+        /* Game over */
+        #screen-over h1 {
+            color: var(--red);
+            -webkit-text-fill-color: var(--red);
+            background: none;
+        }
+
+        /* Live region for screen readers */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+            #number-runner {
+                transition: none;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .footer strong {
+            color: var(--gold);
+        }
+    </style>
+</head>
+<body>
+    <a href="#game-container" class="skip-link">Skip to game</a>
+
+    <div id="game-container" role="main">
+        <!-- START SCREEN -->
+        <div id="screen-start" class="screen active" role="region" aria-labelledby="start-title">
+            <div class="anni-badge" aria-hidden="true">
+                <span>★</span> 35th Anniversary · 1991–2026 <span>★</span>
+            </div>
+            <h1 id="start-title">STAR Divisibility Dash</h1>
+            <p class="school-name">Law Ting Pong Secondary School</p>
+            <p class="chinese-name">羅定邦中學</p>
+            <p class="description">
+                Master the 3-digit shortcut rule for 8<br>
+                <span style="font-size:0.9em;opacity:0.85">Every Student a STAR · Sincerity · Righteousness · Contemplation · Practice</span>
+            </p>
+
+            <div class="control-group">
+                <span class="control-label" id="speed-label">Select Moving Speed</span>
+                <div class="speed-options" role="group" aria-labelledby="speed-label">
+                    <button class="btn-speed" id="sp-slow" aria-pressed="false" onclick="setSpeed('slow')">Slow</button>
+                    <button class="btn-speed selected" id="sp-normal" aria-pressed="true" onclick="setSpeed('normal')">Normal</button>
+                    <button class="btn-speed" id="sp-fast" aria-pressed="false" onclick="setSpeed('fast')">Fast</button>
+                </div>
+            </div>
+
+            <button class="btn-main" onclick="startGame()" aria-describedby="start-desc">
+                Start Game
+            </button>
+            <p id="start-desc" class="sr-only">Press to begin the divisibility challenge. Use the arrow keys or buttons to answer.</p>
+        </div>
+
+        <!-- PLAY SCREEN -->
+        <div id="screen-game" class="screen" role="region" aria-labelledby="game-title" aria-live="polite">
+            <h2 id="game-title" class="sr-only">Game in progress</h2>
+            <div class="hud" aria-live="polite">
+                <span>Score: <span id="hud-score" style="color:var(--green)">0</span></span>
+                <span>Streak: <span id="hud-streak" style="color:var(--purple)">0 🔥</span></span>
+            </div>
+
+            <div id="track-area" aria-hidden="true">
+                <div id="wall"></div>
+                <div id="number-runner">
+                    <span class="digit-hundreds" id="num-h">3</span><span class="digit-last2" id="num-l2">24</span>
+                </div>
+            </div>
+
+            <!-- Visible number for screen readers -->
+            <p class="sr-only" id="current-number-announcement" aria-live="assertive">Current number: 324</p>
+
+            <div class="action-container" role="group" aria-label="Answer choices">
+                <button class="btn-action btn-yes" id="btn-yes" onclick="submitAnswer(true)" aria-keyshortcuts="ArrowLeft">
+                    Divisible by 8
+                </button>
+                <button class="btn-action btn-no" id="btn-no" onclick="submitAnswer(false)" aria-keyshortcuts="ArrowRight">
+                    Not Divisible
+                </button>
+            </div>
+
+            <div class="cheat-sheet" role="note">
+                💡 <strong>Shortcut (Contemplation + Practice):</strong><br>
+                Look at the <span class="highlight-purple">Hundreds</span> digit.<br>
+                • <strong>EVEN</strong> (0,2,4,6,8) → Check if the <span class="highlight-blue">last 2 digits</span> are divisible by 8.<br>
+                • <strong>ODD</strong> (1,3,5,7,9) → <strong>Add 4</strong> to the <span class="highlight-blue">last 2 digits</span>, then check.
+            </div>
+        </div>
+
+        <!-- GAME OVER SCREEN -->
+        <div id="screen-over" class="screen" role="region" aria-labelledby="over-title">
+            <h1 id="over-title">Wall Collision! Game Over</h1>
+            <p class="description" id="game-over-summary"></p>
+            <p class="description" id="star-message" style="color:var(--gold); font-weight:600;"></p>
+            <button class="btn-main" onclick="backToMenu()">Try Again · Show Resilience</button>
+        </div>
+
+        <!-- FEEDBACK POPUP -->
+        <div id="feedback-box" role="alertdialog" aria-modal="true" aria-labelledby="feedback-title" aria-describedby="feedback-explanation" aria-hidden="true">
+            <h2 id="feedback-title">Incorrect!</h2>
+            <div id="feedback-explanation" style="margin-bottom:1.25rem; line-height:1.5;"></div>
+            <button class="btn-main" onclick="closeFeedback()">Continue · Keep Practising</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Law Ting Pong Secondary School</strong> · 羅定邦中學<br>
+        Celebrating 35 Years of Excellence · 1991–2026<br>
+        Every Student a STAR
+    </div>
+
+    <!-- Live region for announcements -->
+    <div id="live-region" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+    <script>
+        let currentNumber, hundreds, lastTwo, isDivisible;
+        let score = 0, streak = 0, maxStreak = 0;
+        let speedSetting = 'normal', positionX = 0, gameActive = false, animationId;
+        const speeds = { slow: 0.7, normal: 1.35, fast: 2.4 };
+
+        // Announce to screen readers
+        function announce(msg) {
+            const live = document.getElementById('live-region');
+            live.textContent = '';
+            setTimeout(() => { live.textContent = msg; }, 50);
+        }
+
+        function setSpeed(val) {
+            speedSetting = val;
+            document.querySelectorAll('.btn-speed').forEach(b => {
+                b.classList.remove('selected');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            const btn = document.getElementById('sp-' + val);
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame() {
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            document.getElementById('hud-score').textContent = score;
+            document.getElementById('hud-streak').textContent = streak + ' 🔥';
+            showScreen('screen-game');
+            gameActive = true;
+            nextQuestion();
+            announce('Game started. New number is coming.');
+        }
+
+        function nextQuestion() {
+            if (!gameActive) return;
+            currentNumber = Math.floor(Math.random() * 900) + 100;
+            hundreds = Math.floor(currentNumber / 100);
+            lastTwo = currentNumber % 100;
+            isDivisible = (currentNumber % 8 === 0);
+
+            document.getElementById('num-h').textContent = hundreds;
+            document.getElementById('num-l2').textContent = String(lastTwo).padStart(2, '0');
+            document.getElementById('current-number-announcement').textContent = `Current number: ${currentNumber}`;
+
+            positionX = 0;
+            document.getElementById('number-runner').style.left = '0px';
+
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(updateFrame);
+        }
+
+        function updateFrame() {
+            if (!gameActive) return;
+            let speed = speeds[speedSetting] * (1 + (Math.min(score, 25) * 0.04));
+            positionX += speed;
+            const runner = document.getElementById('number-runner');
+            runner.style.left = positionX + 'px';
+
+            const maxRight = document.getElementById('track-area').clientWidth - runner.clientWidth - 14;
+            if (positionX >= maxRight) {
+                gameActive = false;
+                endGame();
+            } else {
+                animationId = requestAnimationFrame(updateFrame);
+            }
+        }
+
+        function submitAnswer(guess) {
+            if (!gameActive) return;
+            cancelAnimationFrame(animationId);
+
+            if (guess === isDivisible) {
+                score++;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                document.getElementById('hud-score').textContent = score;
+                document.getElementById('hud-streak').textContent = streak + ' 🔥';
+
+                // Special celebration at 35
+                if (score === 35) {
+                    announce('Congratulations! You reached 35 points – matching the school’s 35th anniversary!');
+                } else {
+                    announce(`Correct! Score is now ${score}. Streak ${streak}.`);
+                }
+                nextQuestion();
+            } else {
+                gameActive = false;
+                streak = 0;
+                document.getElementById('hud-streak').textContent = '0 🔥';
+
+                let isEven = (hundreds % 2 === 0);
+                let txt = `Number: <strong>${currentNumber}</strong><br>`;
+                txt += `Hundreds digit (${hundreds}) is <strong>${isEven ? 'EVEN' : 'ODD'}</strong>.<br>`;
+                if (isEven) {
+                    txt += `Check last 2 digits: <strong>${String(lastTwo).padStart(2,'0')}</strong>.`;
+                } else {
+                    txt += `Add 4 to last 2 digits: <strong>${String(lastTwo).padStart(2,'0')} + 4 = ${lastTwo + 4}</strong>.`;
+                }
+                txt += `<br>It is <strong>${isDivisible ? '' : 'NOT '}divisible by 8</strong>.`;
+                txt += `<br><br><em>Show Resilience – keep practising!</em>`;
+
+                document.getElementById('feedback-explanation').innerHTML = txt;
+                const box = document.getElementById('feedback-box');
+                box.style.display = 'block';
+                box.setAttribute('aria-hidden', 'false');
+                announce('Incorrect. ' + document.getElementById('feedback-explanation').textContent);
+                // Focus the continue button
+                setTimeout(() => box.querySelector('button').focus(), 100);
+            }
+        }
+
+        function closeFeedback() {
+            const box = document.getElementById('feedback-box');
+            box.style.display = 'none';
+            box.setAttribute('aria-hidden', 'true');
+            gameActive = true;
+            nextQuestion();
+            document.getElementById('btn-yes').focus();
+        }
+
+        function endGame() {
+            document.getElementById('game-over-summary').textContent =
+                `You scored ${score} points with a best streak of ${maxStreak}!`;
+
+            let starMsg = '';
+            if (score >= 35) {
+                starMsg = '🌟 Outstanding Aspiration! You reached the 35th Anniversary milestone!';
+            } else if (score >= 20) {
+                starMsg = '🌟 Great Aspiration and Resilience shown today!';
+            } else {
+                starMsg = '🌟 Keep practising with a Teachable spirit – every Student a STAR!';
+            }
+            document.getElementById('star-message').textContent = starMsg;
+
+            showScreen('screen-over');
+            announce(`Game over. Final score ${score}. ${starMsg}`);
+        }
+
+        function backToMenu() {
+            showScreen('screen-start');
+            document.querySelector('#screen-start .btn-main').focus();
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                submitAnswer(true);
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                submitAnswer(false);
+            }
+        });
+    </script>
+</body>
+</html>
